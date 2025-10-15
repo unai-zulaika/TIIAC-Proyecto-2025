@@ -19,7 +19,7 @@ services:
       timeout: 3s
       retries: 10
 
-  # --- Nuevo servicio API ---
+  # --- Servicio API ---
   api:
     build:
       context: ./api
@@ -29,14 +29,13 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      # conexión a la DB existente
-      DATABASE_URL: postgresql+asyncpg://usuario:contraseña@postgres:5432/HM
+      DATABASE_URL: postgresql://usuario:contraseña@postgres:5432/HM
       PRODUCT_IMAGES_DIR: /images
     ports:
       - "8000:8000"
     volumes:
-      - ./api:/app
-      # Descomenta si sirves imágenes desde local
+      - ./api:/api
+      # Si quieres servir imágenes locales, descomenta:
       # - ../../data/images:/images:ro
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 

@@ -1,54 +1,23 @@
-from fastapi import FastAPI, Depends, HTTPException, Query
-from fastapi.responses import RedirectResponse, FileResponse, JSONResponse
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Annotated
-from db import Base, engine, get_session
-from models import Product
-from schemas import ProductOut
-from settings import PRODUCT_IMAGES_DIR
-import os
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
+import models, schemas, crud
+from database import engine, get_db
 
-app = FastAPI(title="Clothing Recommender API", version="0.1.0")
+models.Base.metadata.create_all(bind=engine)
 
-@app.on_event("startup")
-async def on_startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+app = FastAPI(title="Recommendation Backend")
 
-@app.get("/get_product_data", response_model=ProductOut)
-async def get_product_data(
-    id: Annotated[int, Query(description="Product ID (p_id del dataset)")],
-    session: AsyncSession = Depends(get_session)
-):
-    result = await session.execute(select(Product).where(Product.id == id))
-    product = result.scalar_one_or_none()
-    if not product:
-        raise HTTPException(status_code=404, detail=f"Product {id} not found")
-    return ProductOut.model_validate(product)
+@app.get("/")
+def root():
+    return {"message": "🚀 FastAPI Recommendation Backend running"}
 
-@app.get("/get_product_image")
-async def get_product_image(
-    id: Annotated[int, Query(description="Product ID (p_id del dataset)")],
-    session: AsyncSession = Depends(get_session)
-):
-    result = await session.execute(select(Product).where(Product.id == id))
-    product = result.scalar_one_or_none()
-    if not product:
-        raise HTTPException(status_code=404, detail=f"Product {id} not found")
-
-    if product.image_url:
-        return RedirectResponse(
-            url=product.image_url,
-            headers={"Cache-Control": "public, max-age=86400"}
-        )
-
-    if product.image_path:
-        path = product.image_path
-        if not os.path.isabs(path):
-            path = os.path.join(PRODUCT_IMAGES_DIR, path)
-        if os.path.exists(path):
-            return FileResponse(path, media_type="image/jpeg",
-                                headers={"Cache-Control": "public, max-age=86400"})
-
-    return JSONResponse(status_code=404, content={"detail": f"No image for product {id}"})
+@app.get("/articles/{article_id}", response_model=schemas.Article)
+def get_article(article_id: int, db: Session = Depends(get_db)):
+    article = db.query(models.Article).filter(models.Article.article_id == article_id).first()
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    
+    # Asegurarse de que product_code sea string
+    if article.product_code is not None:
+        article.product_code = str(article.product_code)
+    return article
