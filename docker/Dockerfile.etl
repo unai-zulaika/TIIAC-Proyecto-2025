@@ -1,0 +1,17 @@
+FROM python:3.11-slim
+
+# Instalar dependencias necesarias
+RUN apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copiar requirements
+COPY ../../requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar script ETL y datos
+COPY ../../src/etl/etl_load_to_postgres.py ./etl_load_to_postgres.py
+COPY ../../data/csv ./data/csv
+COPY ../../data/img ./data/img
+
+CMD ["python", "etl_load_to_postgres.py"]

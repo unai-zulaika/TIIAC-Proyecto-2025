@@ -15,6 +15,11 @@ services:
       - ./volumes/postgres:/var/lib/postgresql/data
     networks:
       - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c '\\q'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   minio:
     image: minio/minio:latest
@@ -31,11 +36,17 @@ services:
     command: server /data --console-address ":9001"
     networks:
       - backend_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   createbucket:
     image: minio/mc
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     entrypoint: >
       /bin/sh -c "
       sleep 5;
@@ -43,6 +54,21 @@ services:
       mc mb --ignore-existing local/${MINIO_BUCKET_NAME};
       exit 0;
       "
+    networks:
+      - backend_net
+
+  etl_job:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.etl
+    container_name: etl_job
+    depends_on:
+      postgres:
+        condition: service_healthy
+      createbucket:
+        condition: service_completed_successfully
+    env_file:
+      - .env
     networks:
       - backend_net
 
