@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings
 from pydantic import Field
+from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -10,6 +11,9 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "fashion"
     POSTGRES_USER: str = "app"
     POSTGRES_PASSWORD: str = "app"
+
+    # Permitir override directo (útil para sqlite en dev)
+    DB_URL: Optional[str] = None
 
     # AWS S3
     S3_REGION: str = "eu-west-1"
@@ -24,14 +28,16 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
+        if self.DB_URL:
+            return self.DB_URL
+        if self.ENV.lower() == "dev":
+            return "sqlite+aiosqlite:///./dev.db"
         return (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 
-    class Config:
-        env_file = ".env"
-
+    # Configuración Pydantic v2
     model_config = {
         "env_file": ".env",
         "extra": "ignore",

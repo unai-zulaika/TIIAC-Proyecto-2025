@@ -1,13 +1,14 @@
 import boto3
 from botocore.config import Config as BotoConfig
 from fastapi import Depends
-from app.core.config import settings
+from app.core.config import get_settings
 
 
 class ImageService:
     """Simple image service stub for future expansion (validation, uploads, etc.)."""
 
     def __init__(self):
+        settings = get_settings()
         self.bucket = settings.S3_BUCKET
         self.client = boto3.client(
             "s3",
