@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import get_settings
-from app.models import Base  # usar el Base del modelo
+from app.models import Base 
 
 
 settings = get_settings()
