@@ -26,7 +26,7 @@ class CustomerBase(BaseModel):
     postal_code: Optional[str]
 
 class Customer(CustomerBase):
-    customer_id: int
+    customer_id: str
 
     class Config:
         from_attributes = True
@@ -34,7 +34,7 @@ class Customer(CustomerBase):
 
 # --- INTERACTIONS ---
 class InteractionBase(BaseModel):
-    customer_id: int
+    customer_id: str
     article_id: int
     rating: Optional[float]
 
