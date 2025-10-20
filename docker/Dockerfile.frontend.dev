@@ -1,0 +1,17 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copia los archivos de configuración primero (para aprovechar caché)
+COPY ./src/frontend/package*.json ./
+
+RUN npm install
+
+# Copia el resto del código
+# COPY ./src/frontend .
+
+# Expone el puerto por defecto de Vite
+EXPOSE 5173
+
+# Usa el modo desarrollo (hot reload)
+CMD ["npm", "run", "dev", "--", "--host"]

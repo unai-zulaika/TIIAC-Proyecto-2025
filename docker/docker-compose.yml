@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./volumes/postgres:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - backend_net
     healthcheck:
@@ -32,7 +32,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - ./volumes/minio:/data
+      - minio_data:/data
     command: server /data --console-address ":9001"
     networks:
       - backend_net
@@ -72,6 +72,30 @@ services:
     networks:
       - backend_net
 
+  frontend-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend.dev
+    container_name: frontend_dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../src/frontend:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      etl_job:
+        condition: service_completed_successfully
+    networks:
+      - backend_net
+
 networks:
   backend_net:
     driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:
