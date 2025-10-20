@@ -1,0 +1,21 @@
+# Imagen base ligera de Python
+FROM python:3.12-slim
+
+# Set workdir
+WORKDIR /app
+
+# Copiar requirements y .env (opcional)
+COPY ./src/backend/requirements.txt .
+
+# Instalar dependencias
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar el resto del código
+COPY ./src/backend /app
+
+# Exponer el puerto definido en el .env (API_PORT)
+EXPOSE 8080
+
+# Comando por defecto para levantar FastAPI
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

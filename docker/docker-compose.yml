@@ -1,101 +1,122 @@
-version: '3.8'
+  version: '3.8'
 
-services:
-  postgres:
-    image: postgres:15
-    container_name: postgres_db
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - backend_net
-    healthcheck:
-      test: ["CMD-SHELL", "psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c '\\q'"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+  services:
+    postgres:
+      image: postgres:15
+      container_name: postgres_db
+      restart: always
+      environment:
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_DB: ${POSTGRES_DB}
+      ports:
+        - "5432:5432"
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+      networks:
+        - backend_net
+      healthcheck:
+        test: ["CMD-SHELL", "psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c '\\q'"]
+        interval: 5s
+        timeout: 5s
+        retries: 10
 
-  minio:
-    image: minio/minio:latest
-    container_name: minio_s3
-    restart: always
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
-    networks:
-      - backend_net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+    minio:
+      image: minio/minio:latest
+      container_name: minio_s3
+      restart: always
+      environment:
+        MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+        MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      ports:
+        - "9000:9000"
+        - "9001:9001"
+      volumes:
+        - minio_data:/data
+      command: server /data --console-address ":9001"
+      networks:
+        - backend_net
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+        interval: 5s
+        timeout: 5s
+        retries: 10
 
-  createbucket:
-    image: minio/mc
-    depends_on:
-      minio:
-        condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      sleep 5;
-      mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      mc mb --ignore-existing local/${MINIO_BUCKET_NAME};
-      exit 0;
-      "
-    networks:
-      - backend_net
+    createbucket:
+      image: minio/mc
+      depends_on:
+        minio:
+          condition: service_healthy
+      entrypoint: >
+        /bin/sh -c "
+        sleep 5;
+        mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+        mc mb --ignore-existing local/${MINIO_BUCKET_NAME};
+        exit 0;
+        "
+      networks:
+        - backend_net
 
-  etl_job:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.etl
-    container_name: etl_job
-    depends_on:
-      postgres:
-        condition: service_healthy
-      createbucket:
-        condition: service_completed_successfully
-    env_file:
-      - .env
-    networks:
-      - backend_net
+    etl_job:
+      build:
+        context: ..
+        dockerfile: docker/Dockerfile.etl
+      container_name: etl_job
+      depends_on:
+        postgres:
+          condition: service_healthy
+        createbucket:
+          condition: service_completed_successfully
+      env_file:
+        - .env
+      networks:
+        - backend_net
 
-  frontend-dev:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.frontend.dev
-    container_name: frontend_dev
-    ports:
-      - "5173:5173"
-    volumes:
-      - ../src/frontend:/app
-      - /app/node_modules
-    depends_on:
-      postgres:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-      etl_job:
-        condition: service_completed_successfully
-    networks:
-      - backend_net
+    backend:
+      build:
+        context: ..
+        dockerfile: docker/Dockerfile.backend
+      container_name: backend
+      ports:
+        - "8080:8080"
+      env_file:
+        - .env
+      depends_on:
+        postgres:
+          condition: service_healthy
+        minio:
+          condition: service_healthy
+        createbucket:
+          condition: service_completed_successfully
+        etl_job:
+          condition: service_completed_successfully
+      networks:
+        - backend_net
+      healthcheck:
+        test: "exit 0"
 
-networks:
-  backend_net:
-    driver: bridge
+    frontend-dev:
+      build:
+        context: ..
+        dockerfile: docker/Dockerfile.frontend.dev
+      container_name: frontend_dev
+      ports:
+        - "5173:5173"
+      volumes:
+        - ../src/frontend:/app
+        - /app/node_modules
+      environment:
+        VITE_API_BASE_URL: http://localhost:8080
+      depends_on:
+        backend:
+          condition: service_healthy
+      networks:
+        - backend_net
 
-volumes:
-  postgres_data:
-  minio_data:
+  networks:
+    backend_net:
+      driver: bridge
+
+  volumes:
+    postgres_data:
+    minio_data:

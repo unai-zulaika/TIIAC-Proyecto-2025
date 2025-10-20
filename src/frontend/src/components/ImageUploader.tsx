@@ -50,20 +50,20 @@ export default function ImageUploader({ onImageSelected }: ImageUploaderProps) {
         className="hidden"
       />
       {image ? (
-        <div className="flex flex-col gap-4"> 
+        <div className="flex flex-col gap-4">
           <img
             src={image}
             alt="Vista previa"
             className="mt-4 rounded-xl shadow-md max-h-96 object-contain"
           />
           <div className="flex justify-center gap-4">
-            <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg mr-2 transition"
+            <button className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg mr-2 transition"
                 onClick={handleAccept}
             >
-              Aceptar
+              Confirmar
             </button>
             <button 
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition"
+                className="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition"
                 onClick={handleCancel}
             >
               Borrar
