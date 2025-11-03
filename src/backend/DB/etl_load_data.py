@@ -98,6 +98,7 @@ def load_df(df, table_name="etl_demo"):
                 columns = df.columns
                 col_defs = ", ".join(f"{col} TEXT" for col in columns)
                 cur.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({col_defs});")
+                print("Hola 2")
                 # Prepare data for insertion
                 values = [tuple(row) for row in df.to_numpy()]
                 # Batch insert for efficiency
@@ -143,13 +144,15 @@ def load_csv(file_path):
         return df
 
 def run_etl():
-        health_check()
+        # health_check()
         # df = load_csv("../../data/articles.csv")
         # print(df.head())
 
         # load_df(df, table_name="products")
 
-        df = load_csv("../../data/transactions_train.csv")
+        df = load_csv("C:\\Users\\n1fer\\Desktop\\Deusto\\5º Carrera\\Trabajo integrado de computación e IA\\Projectos\\TIIAC-Proyecto-2025\\data\\transactions_train.csv")
+        # keep only 200 rows for testing
+        df = df.head(500_000)
         load_df(df, table_name="transactions")
         logger.info("ETL completed")
 

@@ -34,3 +34,14 @@ uvicorn main:app --reload
 http://127.0.0.1:8000        
 O a la documentacion con swagger:
 http://127.0.0.1:8000/docs#/
+
+## **Iniciar Frontend:**
+1. En la carpeta src/FrontEnd/mi-app
+Si es la primera ejecución;
+```bash
+npm install
+```
+Sino:
+```bash
+npm run dev
+```
