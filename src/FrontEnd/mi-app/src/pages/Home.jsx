@@ -9,7 +9,7 @@ export default function Home() {
     return (
         <div className="centered-container">
             <div className="panel">
-                <h1 className="panel-title">Panel de usuario</h1>
+                <h1 className="panel-title">Panel de Usuario</h1>
 
                 <div className="input-row">
                     <label>Customer ID:</label>
@@ -40,7 +40,7 @@ export default function Home() {
 
                 <div className="content-area">
                     {view === "transactions" && <Transactions customerId={customerId} />}
-                    {view === "recommendations" && <Recommendations customerId={customerId} topK={6} />}
+                    {view === "recommendations" && <Recommendations customerId={customerId} />}
                 </div>
             </div>
         </div>

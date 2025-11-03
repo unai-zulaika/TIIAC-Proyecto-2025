@@ -51,7 +51,7 @@ def get_customers(customer_id: str, db: Session = Depends(get_db)):
 
 # Esto no funciona todavia, es para cuando tengamos creados los embeddings en la base de datos
 @app.get("/recommendations/{customer_id}")
-def get_recommendations(customer_id: str, top_k: int = 4, db: Session = Depends(get_db)):
+def get_recommendations(customer_id: str, top_k: int = 5, db: Session = Depends(get_db)):
     """
     Devuelve las top_k prendas más similares al embedding del usuario.
     Intenta usar embedding en models.Customer; si no existe, lee customer_embeddings.
