@@ -10,3 +10,5 @@ aiosqlite==0.20.0
 streamlit==1.40.0
 requests==2.32.3
 Pillow==10.4.0  
+torch==2.9.0
+python-multipart

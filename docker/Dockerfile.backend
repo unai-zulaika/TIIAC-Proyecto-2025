@@ -10,9 +10,13 @@ COPY ./src/backend/requirements.txt .
 # Instalar dependencias
 RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu \
+    torch==2.4.1 torchvision==0.19.1
+RUN pip install python-multipart
 
 # Copiar el resto del código
 COPY ./src/backend /app
+COPY ./data /app/data
 
 # Exponer el puerto definido en el .env (API_PORT)
 EXPOSE 8080
