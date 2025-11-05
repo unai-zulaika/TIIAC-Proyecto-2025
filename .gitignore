@@ -213,4 +213,4 @@ docker/volumes/
 data/
 
 #Los embeddings de las imagenes ya que son 100MB
-C:\Users\joorg\Documents\UNI\5\ia\TIIAC-Proyecto-2025\src\backend\app\entrenamiento\image_embeddings.npz
+src/backend/app/entrenamiento/image_embeddings.npz
