@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  # --- Base de datos existente ---
+  postgres:
+    image: postgres:latest
+    container_name: mi_postgres
+    environment:
+      POSTGRES_USER: usuario
+      POSTGRES_PASSWORD: contraseña
+      POSTGRES_DB: HM
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U usuario -d HM"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # --- Servicio API ---
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: hm_api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://usuario:contraseña@postgres:5432/HM
+      PRODUCT_IMAGES_DIR: /images
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/api
+      # Si quieres servir imágenes locales, descomenta:
+      # - ../../data/images:/images:ro
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  pgdata:
